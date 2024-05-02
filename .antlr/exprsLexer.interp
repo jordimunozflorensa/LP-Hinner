@@ -7,14 +7,14 @@ null
 
 token symbolic names:
 null
-null
-null
+LPAR
+RPAR
 ID
 NUM
 
 rule names:
-T__0
-T__1
+LPAR
+RPAR
 ID
 NUM
 

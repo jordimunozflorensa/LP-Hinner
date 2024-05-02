@@ -1,4 +1,4 @@
-// Generated from /home/jordi/Escritorio/Jordi/q6/lp/lp_hinner/HN.g4 by ANTLR 4.13.1
+// Generated from /home/jordi/Escritorio/Jordi/q6/lp/lp_hinner/hm.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
@@ -16,7 +16,7 @@ public class exprsLexer extends Lexer {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, T__1=2, ID=3, NUM=4;
+		LPAR=1, RPAR=2, ID=3, NUM=4;
 	public static String[] channelNames = {
 		"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
 	};
@@ -27,7 +27,7 @@ public class exprsLexer extends Lexer {
 
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"T__0", "T__1", "ID", "NUM"
+			"LPAR", "RPAR", "ID", "NUM"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -40,7 +40,7 @@ public class exprsLexer extends Lexer {
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, null, null, "ID", "NUM"
+			null, "LPAR", "RPAR", "ID", "NUM"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -84,7 +84,7 @@ public class exprsLexer extends Lexer {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "HN.g4"; }
+	public String getGrammarFileName() { return "hm.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
