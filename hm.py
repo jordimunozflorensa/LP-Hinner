@@ -1,29 +1,25 @@
+# antlr4 -Dlanguage=Python3 -no-listener hm.g4
+# antlr4 -Dlanguage=Python3 -no-listener -visitor hm.g4
+# python3 hm.py
 from antlr4 import *
 import streamlit as st
-# from exprsLexer import exprsLexer
-# from exprsParser import exprsParser
-# from exprsVisitor import exprsVisitor
-import sys
-
-st.write('Hello world!')
-# class EvalVisitor(exprsVisitor):
-  
+from hmLexer import hmLexer
+from hmParser import hmParser
+# import hmVisitor
+# import sys
 
 # if (len(sys.argv) > 1):
 #   input_stream = FileStream(sys.argv[1])
 # else:
 #   input_stream = StdinStream()
 
-# lexer = exprsLexer(input_stream)
-# token_stream = CommonTokenStream(lexer)
-# parser = exprsParser(token_stream)
-# tree = parser.root()
+input_stream = InputStream(input('? '))
+lexer = hmLexer(input_stream)
+token_stream = CommonTokenStream(lexer)
+parser = hmParser(token_stream)
+tree = parser.root()
 
-# if parser.getNumberOfSyntaxErrors() == 0:
-#   # visitor = TreeVisitor()
-#   # visitor.visit(tree)
-#   visitor = EvalVisitor()
-#   visitor.visit(tree)
-# else:
-#   print(parser.getNumberOfSyntaxErrors(), 'errors de sintaxi.')
-#   print(tree.toStringTree(recog=parser))
+st.title('Pràctica 1: Analitzador sintàctic')
+st.write(parser.getNumberOfSyntaxErrors(), 'errors de sintaxi.')ç
+st.write("jweirjweo")
+print(tree.toStringTree(recog=parser))
