@@ -14,33 +14,38 @@ class hmVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by hmParser#stmts.
-    def visitStmts(self, ctx:hmParser.StmtsContext):
+    # Visit a parse tree produced by hmParser#typing.
+    def visitTyping(self, ctx:hmParser.TypingContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by hmParser#stmt.
-    def visitStmt(self, ctx:hmParser.StmtContext):
+    # Visit a parse tree produced by hmParser#app.
+    def visitApp(self, ctx:hmParser.AppContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by hmParser#lam.
-    def visitLam(self, ctx:hmParser.LamContext):
+    # Visit a parse tree produced by hmParser#paren.
+    def visitParen(self, ctx:hmParser.ParenContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by hmParser#apl.
-    def visitApl(self, ctx:hmParser.AplContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by hmParser#expr.
-    def visitExpr(self, ctx:hmParser.ExprContext):
+    # Visit a parse tree produced by hmParser#lambda.
+    def visitLambda(self, ctx:hmParser.LambdaContext):
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by hmParser#oper.
     def visitOper(self, ctx:hmParser.OperContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by hmParser#idexpr.
+    def visitIdexpr(self, ctx:hmParser.IdexprContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by hmParser#numexpr.
+    def visitNumexpr(self, ctx:hmParser.NumexprContext):
         return self.visitChildren(ctx)
 
 

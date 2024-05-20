@@ -1,42 +1,24 @@
 grammar hm;
 
-root: stmts;
+root: typing* expr? typing* EOF;
 
-stmts: stmt+;
+typing: (OPER | NUM) PP TYPE (ARROW TYPE)*;
 
-stmt: expr
-    | apl
-    | lam
+expr: LPAR expr RPAR                        # paren 
+    | expr expr                             # app
+    | <assoc=right> CBAR ID ARROW expr      # lambda
+    | OPER                                  # oper
+    | ID                                    # idexpr
+    | NUM                                   # numexpr
     ;
 
-lam: CBAR ID ARROW expr expr expr
-    | LPAR lam RPAR
-    | LPAR oper RPAR
-    ;
-
-apl: apl expr
-    | lam
-    ;
-
-expr: ID   
-    | NUM
-    | LPAR expr RPAR
-    ;
-
-oper: PLUS
-    | MINUS
-    | MUL
-    | DIV
-    ;
-
-PLUS      : '+' ;
-MINUS     : '-' ;
-MUL       : '*' ;
-DIV       : '/' ;
+OPER      : ('(*)' | '(/)' | '(+)' | '(-)') ;
 LPAR      : '(' ;
 RPAR      : ')' ;
 ARROW     : '->' ;
 CBAR      : '\\' ;
-ID        : ('a'..'z')+ ;
+PP        : '::' ;
+ID        : [a-z] [a-zA-Z]* ;
+TYPE      : [A-Z] [a-zA-Z]* ;
 NUM       : [0-9]+ ;
 WS        : [ \t\n\r]+ -> skip ;
