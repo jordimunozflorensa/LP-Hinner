@@ -105,6 +105,14 @@ public class hmParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_root; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).enterRoot(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).exitRoot(this);
+		}
 	}
 
 	public final RootContext root() throws RecognitionException {
@@ -187,6 +195,14 @@ public class hmParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_typing; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).enterTyping(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).exitTyping(this);
+		}
 	}
 
 	public final TypingContext typing() throws RecognitionException {
@@ -260,6 +276,14 @@ public class hmParser extends Parser {
 			return getRuleContext(ExprContext.class,i);
 		}
 		public AppContext(ExprContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).enterApp(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).exitApp(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class ParenContext extends ExprContext {
@@ -269,6 +293,14 @@ public class hmParser extends Parser {
 		}
 		public TerminalNode RPAR() { return getToken(hmParser.RPAR, 0); }
 		public ParenContext(ExprContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).enterParen(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).exitParen(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class LambdaContext extends ExprContext {
@@ -279,21 +311,53 @@ public class hmParser extends Parser {
 			return getRuleContext(ExprContext.class,0);
 		}
 		public LambdaContext(ExprContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).enterLambda(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).exitLambda(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class OperContext extends ExprContext {
 		public TerminalNode OPER() { return getToken(hmParser.OPER, 0); }
 		public OperContext(ExprContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).enterOper(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).exitOper(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class IdexprContext extends ExprContext {
 		public TerminalNode ID() { return getToken(hmParser.ID, 0); }
 		public IdexprContext(ExprContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).enterIdexpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).exitIdexpr(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class NumexprContext extends ExprContext {
 		public TerminalNode NUM() { return getToken(hmParser.NUM, 0); }
 		public NumexprContext(ExprContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).enterNumexpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof hmListener ) ((hmListener)listener).exitNumexpr(this);
+		}
 	}
 
 	public final ExprContext expr() throws RecognitionException {
