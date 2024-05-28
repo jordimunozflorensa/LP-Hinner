@@ -10,6 +10,11 @@ from typing import Tuple, List, Dict, Union
 from graphviz import Graph
 import pandas as pd
 
+
+# -----------------------------------------------------------------------------
+
+# TIPUS ALGEBRAICS
+
 @dataclass
 class Var:
     name: str
@@ -26,7 +31,7 @@ class Const:
 Type = Const | App | Var
 
 taula_de_simbols = {}
-file_path = 'data.pkl'
+file_path = 'backup.pkl'
 
 class Buit:
     pass
@@ -40,6 +45,75 @@ class Node:
 
 Arbre = Node | Buit
 
+# -----------------------------------------------------------------------------
+
+# FUNCIONS
+
+# Funcio per imprimir l'arbre per terminal, utilizada per debugar
+def print_arbre(arbre: Arbre, level=0):
+    if isinstance(arbre, Buit):
+        print(" " * (level * 2) + "Buit")
+    elif isinstance(arbre, Node):
+        print(" " * (level * 2) + arbre.val)
+        print_arbre(arbre.esq, level + 1)
+        print_arbre(arbre.dre, level + 1)
+
+# Funcio per parejar un tipus en format string
+def parseja_tipus(tipus: Type) -> str:
+    if isinstance(tipus, Const):
+        return tipus.value
+    elif isinstance(tipus, Var):
+        return tipus.name
+    elif isinstance(tipus, App):
+        esq_str = parseja_tipus(tipus.esq)
+        dre_str = parseja_tipus(tipus.dre)
+        return f"({esq_str} -> {dre_str})"
+    else:
+        raise TypeError("Type no acceptat al parsejar un tipus")
+
+# Funcio per convertir l'arbre en format dot per a ser visualitzat amb graphviz
+def to_dot(arbre: Arbre, graph=None, parent=None, node_id=0):
+    if graph is None:
+        graph = Graph()
+    
+    if isinstance(arbre, Buit):
+        return graph, node_id
+    
+    node_label = arbre.val + '\n' + parseja_tipus(arbre.tipus)
+
+    current_node_id = f'node{node_id}'
+    graph.node(current_node_id, node_label)
+    
+    if parent is not None:
+        graph.edge(parent, current_node_id)
+    
+    node_id += 1
+    
+    if isinstance(arbre, Node):
+        graph, node_id = to_dot(arbre.esq, graph, current_node_id, node_id)
+        graph, node_id = to_dot(arbre.dre, graph, current_node_id, node_id)
+    
+    return graph, node_id
+
+# Funcio per visualitzar el grafic generat per graphviz
+def graphviz_chart(arbre: Arbre):
+    dot, _ = to_dot(arbre)
+    st.graphviz_chart(dot)
+
+# Funcio per guardar la taula de simbols
+def save_data():
+    with open(file_path, 'wb') as f:
+        pickle.dump(taula_de_simbols, f)
+    
+# Funcio per carregar la taula de simbols
+def load_data():
+    try:
+        with open(file_path, 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return {}
+
+# Funcio per insertar un tipus en format string a l'arbre
 def inserta_tipus(llista: List[str]) -> Type:
     if not llista:
         raise ValueError("La llista no pot ser buida")
@@ -51,16 +125,7 @@ def inserta_tipus(llista: List[str]) -> Type:
     
     return result
 
-def busca_tipus(tipus: Type) -> str:
-    if isinstance(tipus, Const):
-        return tipus.value
-    elif isinstance(tipus, Var):
-        return tipus.name
-    elif isinstance(tipus, App):
-        return f"({busca_tipus(tipus.esq)} -> {busca_tipus(tipus.dre)})"
-    else:
-        raise TypeError("Tipus no acceptat al buscar tipus")
-
+# esq = dre -> @
 def infereix_App(arb : Arbre, taula_inferida):
     if isinstance(arb, Buit):
         return
@@ -69,21 +134,25 @@ def infereix_App(arb : Arbre, taula_inferida):
     infereix_App(arb.dre, taula_inferida)   
 
     if arb.val == '@' and isinstance(arb.tipus, Var):
+        # Si esq es una App o un Const
         if not isinstance(arb.esq.tipus, Var):
-            if (arb.esq.tipus.esq != arb.dre.tipus) and not isinstance(arb.dre.tipus, Var):
-                st.write('TypeError => No es pot inferir el tipus: ' + busca_tipus(arb.esq.tipus.esq) + ' amb el tipus: ' + busca_tipus(arb.dre.tipus))
-                
-                # raise Exception()
+            # Si dre es una App o un Const i no es poden inferir
+            if not isinstance(arb.dre.tipus, Var) and (arb.esq.tipus.esq != arb.dre.tipus):
+                st.write('TypeError => No es pot inferir el tipus: ' + parseja_tipus(arb.esq.tipus.esq) + ' amb el tipus: ' + parseja_tipus(arb.dre.tipus))
+                raise Exception()
             
+            # inferir tipus
             taula_inferida[arb.tipus.name] = arb.esq.tipus.dre
             if isinstance(arb.dre.tipus, Var):
                 taula_inferida[arb.dre.tipus.name] = arb.esq.tipus.esq
                 arb.dre.tipus = arb.esq.tipus.esq
             arb.tipus = arb.esq.tipus.dre
-
+            
+            # Guardar tipus a la taula de simbols
             taula_de_simbols[arb.dre.val] = arb.dre.tipus
             taula_de_simbols[arb.val] = arb.esq.tipus.dre
 
+# λ = esq -> dre
 def infereix_Abs(arb : Arbre, taula_inferida):
     if isinstance(arb, Buit):
         return
@@ -92,22 +161,31 @@ def infereix_Abs(arb : Arbre, taula_inferida):
     infereix_Abs(arb.dre, taula_inferida)
 
     if arb.val == 'λ' and isinstance(arb.tipus, Var):
+        # Si esq es una App o un Const
         if not isinstance(arb.dre.tipus, Var):
             arb.esq.tipus = taula_de_simbols[arb.esq.val]
             taula_inferida[arb.tipus.name] = App(arb.esq.tipus, arb.dre.tipus)
             arb.tipus = App(arb.esq.tipus, arb.dre.tipus)
 
+# Funcions per escriure una taula a l'streamlit
 def escriu_taula(taula):
-    d = taula
-    data = [(var, parseja_tipus(tipus)) for var, tipus in d.items()]
+    t = taula
+    data = [(var, parseja_tipus(tipus)) for var, tipus in t.items()]
     df = pd.DataFrame(data, columns=['Var', 'Tipus'])
     st.dataframe(df)
 
+# -----------------------------------------------------------------------------
+
+# TREEVISITOR
+
+# Visitor per recorrer l'arbre
 class TreeVisitor(hmVisitor):
     def __init__(self):
         self.lletra = 'a'
         self.variables = {}
 
+    # Funcio per visitar el node root i en cas que sigui una expressió 
+    # realitzar les escriptures de les taules i els grafs.
     def visitRoot(self, ctx):
         resultats = []
         for expressio in ctx.getChildren():
@@ -134,14 +212,13 @@ class TreeVisitor(hmVisitor):
     def visitTyping(self, ctx):
         [var, _, type_, *types] = list(ctx.getChildren())
         type_var = type_.getText()
+
         if len(types) != 0:
             llista = []
             llista.append(type_var)
             for i in range(0, len(types), 2):
                 llista.append(types[i-1].getText())
-            
             taula_de_simbols[var.getText()] = inserta_tipus(llista)
-
         else:
             taula_de_simbols[var.getText()] = Const(type_var)
         save_data()
@@ -200,78 +277,12 @@ class TreeVisitor(hmVisitor):
                 self.lletra = chr(ord(self.lletra) + 1)
             e = Node(num.getText(), self.variables[num.getText()], Buit(), Buit())
         return e
-
-def print_arbre(arbre: Arbre, level=0):
-    if isinstance(arbre, Buit):
-        print(" " * (level * 2) + "Buit")
-    elif isinstance(arbre, Node):
-        print(" " * (level * 2) + arbre.val)
-        print_arbre(arbre.esq, level + 1)
-        print_arbre(arbre.dre, level + 1)
-
-
-def showtype(t: Type) -> str:
-    if isinstance(t, Var):
-        return t.name
-    elif isinstance(t, Const):
-        return t.value
-    elif isinstance(t, App):
-        return f"{showtype(t.name)}({showtype(t.args)})"
-    return ""
-
-
-def parseja_tipus(tipus: Type) -> str:
-    if isinstance(tipus, Const):
-        return tipus.value
-    elif isinstance(tipus, Var):
-        return tipus.name
-    elif isinstance(tipus, App):
-        esq_str = parseja_tipus(tipus.esq)
-        dre_str = parseja_tipus(tipus.dre)
-        return f"({esq_str} -> {dre_str})"
-    else:
-        raise TypeError("Type no acceptat al parsejar un tipus")
-
-
-def to_dot(arbre: Arbre, graph=None, parent=None, node_id=0):
-    if graph is None:
-        graph = Graph()
     
-    if isinstance(arbre, Buit):
-        return graph, node_id
-    
-    node_label = arbre.val + '\n' + parseja_tipus(arbre.tipus)
+# -----------------------------------------------------------------------------
 
-    current_node_id = f'node{node_id}'
-    graph.node(current_node_id, node_label)
-    
-    if parent is not None:
-        graph.edge(parent, current_node_id)
-    
-    node_id += 1
-    
-    if isinstance(arbre, Node):
-        graph, node_id = to_dot(arbre.esq, graph, current_node_id, node_id)
-        graph, node_id = to_dot(arbre.dre, graph, current_node_id, node_id)
-    
-    return graph, node_id
+# GESTIÓ DE STREAMLIT
 
-def graphviz_chart(arbre: Arbre):
-    dot, _ = to_dot(arbre)
-    st.graphviz_chart(dot)
-
-def save_data():
-    with open(file_path, 'wb') as f:
-        pickle.dump(taula_de_simbols, f)
-    
-def load_data():
-    try:
-        with open(file_path, 'rb') as f:
-            return pickle.load(f)
-    except FileNotFoundError:
-        return {}
-
-
+# Estrucutra de dades per a guardar la taula de simbols
 taula_de_simbols = load_data()
 
 st.title("Inferència de tipus")
@@ -292,61 +303,4 @@ if st.button('fer'):
 
     st.write(str(parser.getNumberOfSyntaxErrors()) + ' errors de sintaxi.')
 
-# def unify(x, y, subst):
-#     """Unifies term x and y with initial subst.
-
-#     Returns a subst (map of name->term) that unifies x and y, or None if
-#     they can't be unified. Pass subst={} if no subst are initially
-#     known. Note that {} means valid (but empty) subst.
-#     """
-#     if subst is None:
-#         return None
-#     elif x == y:
-#         return subst
-#     elif isinstance(x, Var):
-#         return unify_variable(x, y, subst)
-#     elif isinstance(y, Var):
-#         return unify_variable(y, x, subst)
-#     elif isinstance(x, App) and isinstance(y, App):
-#         if x.fname != y.fname or len(x.args) != len(y.args):
-#             return None
-#         else:
-#             for i in range(len(x.args)):
-#                 subst = unify(x.args[i], y.args[i], subst)
-#             return subst
-#     else:
-#         return None
-
-
-# def unify_variable(v, x, subst):
-#     """Unifies variable v with term x, using subst.
-
-#     Returns updated subst or None on failure.
-#     """
-#     assert isinstance(v, Var)
-#     if v.name in subst:
-#         return unify(subst[v.name], x, subst)
-#     elif isinstance(x, Var) and x.name in subst:
-#         return unify(v, subst[x.name], subst)
-#     elif occurs_check(v, x, subst):
-#         return None
-#     else:
-#         # v is not yet in subst and can't simplify x. Extend subst.
-#         return {**subst, v.name: x}
-
-
-# def occurs_check(v, term, subst):
-#     """Does the variable v occur anywhere inside term?
-
-#     Variables in term are looked up in subst and the check is applied
-#     recursively.
-#     """
-#     assert isinstance(v, Var)
-#     if v == term:
-#         return True
-#     elif isinstance(term, Var) and term.name in subst:
-#         return occurs_check(v, subst[term.name], subst)
-#     elif isinstance(term, App):
-#         return any(occurs_check(v, arg, subst) for arg in term.args)
-#     else:
-#         return False
+# -----------------------------------------------------------------------------
