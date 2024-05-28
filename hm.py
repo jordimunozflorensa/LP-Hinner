@@ -6,10 +6,9 @@ from hmLexer import hmLexer
 from hmParser import hmParser
 from hmVisitor import hmVisitor
 import pickle
-from typing import Tuple, List, Dict, Union
+from typing import List
 from graphviz import Graph
 import pandas as pd
-
 
 # -----------------------------------------------------------------------------
 
@@ -133,7 +132,7 @@ def infereix_App(arb : Arbre, taula_inferida):
     infereix_App(arb.esq, taula_inferida)
     infereix_App(arb.dre, taula_inferida)   
 
-    if arb.val == '@' and isinstance(arb.tipus, Var):
+    if isinstance(arb.tipus, Var) and arb.val == '@':
         # Si esq es una App o un Const
         if not isinstance(arb.esq.tipus, Var):
             # Si dre es una App o un Const i no es poden inferir
@@ -160,7 +159,7 @@ def infereix_Abs(arb : Arbre, taula_inferida):
     infereix_Abs(arb.esq, taula_inferida)
     infereix_Abs(arb.dre, taula_inferida)
 
-    if arb.val == 'λ' and isinstance(arb.tipus, Var):
+    if isinstance(arb.tipus, Var) and arb.val == 'λ':
         # Si esq es una App o un Const
         if not isinstance(arb.dre.tipus, Var):
             arb.esq.tipus = taula_de_simbols[arb.esq.val]
@@ -300,6 +299,8 @@ if st.button('fer'):
     tree = parser.root()
     visitor = TreeVisitor()
     visitor.visit(tree)
+    # t_res = visitor.visit(tree)
+    # print(t_res)
 
     st.write(str(parser.getNumberOfSyntaxErrors()) + ' errors de sintaxi.')
 
