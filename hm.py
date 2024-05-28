@@ -51,6 +51,58 @@ def inserta_tipus(llista: List[str]) -> Type:
     
     return result
 
+def busca_tipus(tipus: Type) -> str:
+    if isinstance(tipus, Const):
+        return tipus.value
+    elif isinstance(tipus, Var):
+        return tipus.name
+    elif isinstance(tipus, App):
+        return f"({busca_tipus(tipus.esq)} -> {busca_tipus(tipus.dre)})"
+    else:
+        raise TypeError("Tipus no acceptat al buscar tipus")
+
+def infereix_App(arb : Arbre, taula_inferida):
+    if isinstance(arb, Buit):
+        return
+    
+    infereix_App(arb.esq, taula_inferida)
+    infereix_App(arb.dre, taula_inferida)   
+
+    if arb.val == '@' and isinstance(arb.tipus, Var):
+        if not isinstance(arb.esq.tipus, Var):
+            if (arb.esq.tipus.esq != arb.dre.tipus) and not isinstance(arb.dre.tipus, Var):
+                st.write('TypeError => No es pot inferir el tipus: ' + busca_tipus(arb.esq.tipus.esq) + ' amb el tipus: ' + busca_tipus(arb.dre.tipus))
+                
+                # raise Exception()
+            
+            taula_inferida[arb.tipus.name] = arb.esq.tipus.dre
+            if isinstance(arb.dre.tipus, Var):
+                taula_inferida[arb.dre.tipus.name] = arb.esq.tipus.esq
+                arb.dre.tipus = arb.esq.tipus.esq
+            arb.tipus = arb.esq.tipus.dre
+
+            taula_de_simbols[arb.dre.val] = arb.dre.tipus
+            taula_de_simbols[arb.val] = arb.esq.tipus.dre
+
+def infereix_Abs(arb : Arbre, taula_inferida):
+    if isinstance(arb, Buit):
+        return
+    
+    infereix_Abs(arb.esq, taula_inferida)
+    infereix_Abs(arb.dre, taula_inferida)
+
+    if arb.val == 'λ' and isinstance(arb.tipus, Var):
+        if not isinstance(arb.dre.tipus, Var):
+            arb.esq.tipus = taula_de_simbols[arb.esq.val]
+            taula_inferida[arb.tipus.name] = App(arb.esq.tipus, arb.dre.tipus)
+            arb.tipus = App(arb.esq.tipus, arb.dre.tipus)
+
+def escriu_taula(taula):
+    d = taula
+    data = [(var, parseja_tipus(tipus)) for var, tipus in d.items()]
+    df = pd.DataFrame(data, columns=['Var', 'Tipus'])
+    st.dataframe(df)
+
 class TreeVisitor(hmVisitor):
     def __init__(self):
         self.lletra = 'a'
@@ -61,7 +113,16 @@ class TreeVisitor(hmVisitor):
         for expressio in ctx.getChildren():
             e = self.visit(expressio)
             if e is not None:
+                escriu_taula(taula_de_simbols)
                 graphviz_chart(e)
+    
+                taula_inferida = {}
+                infereix_App(e, taula_inferida)
+                infereix_Abs(e, taula_inferida)
+
+                graphviz_chart(e)
+                escriu_taula(taula_inferida)
+
             resultats.append(e)
         return resultats
         
@@ -80,8 +141,7 @@ class TreeVisitor(hmVisitor):
                 llista.append(types[i-1].getText())
             
             taula_de_simbols[var.getText()] = inserta_tipus(llista)
-            # print(llista)
-            # taula_de_simbols[var.getText()] = Const("hola")
+
         else:
             taula_de_simbols[var.getText()] = Const(type_var)
         save_data()
@@ -217,6 +277,10 @@ taula_de_simbols = load_data()
 st.title("Inferència de tipus")
 msg = st.text_area(label='Expressió:', value='(+) :: N -> N -> N\n2 :: N\n\\x -> (+) 2 x', height=50)
 
+if st.button('resetejar'):
+    taula_de_simbols = {}
+    save_data()
+
 if st.button('fer'):
     input_stream =  InputStream(msg)
     lexer = hmLexer(input_stream)
@@ -225,19 +289,8 @@ if st.button('fer'):
     tree = parser.root()
     visitor = TreeVisitor()
     visitor.visit(tree)
-    # print(res)
 
     st.write(str(parser.getNumberOfSyntaxErrors()) + ' errors de sintaxi.')
-
-    d = taula_de_simbols
-    data = [(var, parseja_tipus(tipus)) for var, tipus in d.items()]
-    df = pd.DataFrame(data, columns=['Var', 'Tipus'])
-    st.dataframe(df)
-
-if st.button('resetejar'):
-    taula_de_simbols = {}
-    save_data()
-
 
 # def unify(x, y, subst):
 #     """Unifies term x and y with initial subst.
