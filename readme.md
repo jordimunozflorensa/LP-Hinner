@@ -32,6 +32,9 @@ i la taula amb les inferencies.
 
 # Execució
 
+Primer cop: antlr4 -Dlanguage=Python3 -no-listener -visitor hm.g4
+streamlit run hm.py
+
 Per realitzar l'execuió, he utilizat la funcionalitat de que en la primera 
 execució ja hi hagi un exemple a evaluar, es pot canviar en la linia 288
 modificant l'atribut value de la funcio text_area seguint el format adient.
@@ -44,9 +47,3 @@ definició despres d'avaluar l'expressió.
 Per probar un exemple s'ha de premer el boto fer.
 
 Per esborrar els símbols d'execucions prèvies s'ha de premer el botó resetejar.
-
-# Casos probats:
-
-- Cas d'error en inferència: '(+) :: P -> P -> P\n1 :: S\n(+) 1 x'
-
-- Cas correcte en inferència: '(+) :: N -> N -> N\n2 :: N\n\\x -> (+) 2 x'

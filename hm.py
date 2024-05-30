@@ -141,15 +141,16 @@ def infereix_App(arb : Arbre, taula_inferida):
                 raise Exception()
             
             # inferir tipus
-            taula_inferida[arb.tipus.name] = arb.esq.tipus.dre
-            if isinstance(arb.dre.tipus, Var):
-                taula_inferida[arb.dre.tipus.name] = arb.esq.tipus.esq
-                arb.dre.tipus = arb.esq.tipus.esq
-            arb.tipus = arb.esq.tipus.dre
-            
-            # Guardar tipus a la taula de simbols
-            taula_de_simbols[arb.dre.val] = arb.dre.tipus
-            taula_de_simbols[arb.val] = arb.esq.tipus.dre
+            if not isinstance(arb.esq.tipus, Const):
+                taula_inferida[arb.tipus.name] = arb.esq.tipus.dre
+                if isinstance(arb.dre.tipus, Var):
+                    taula_inferida[arb.dre.tipus.name] = arb.esq.tipus.esq
+                    arb.dre.tipus = arb.esq.tipus.esq
+                arb.tipus = arb.esq.tipus.dre
+                
+                # Guardar tipus a la taula de simbols
+                taula_de_simbols[arb.dre.val] = arb.dre.tipus
+                taula_de_simbols[arb.val] = arb.esq.tipus.dre
 
 # λ = esq -> dre
 def infereix_Abs(arb : Arbre, taula_inferida):
@@ -196,9 +197,10 @@ class TreeVisitor(hmVisitor):
                 taula_inferida = {}
                 infereix_App(e, taula_inferida)
                 infereix_Abs(e, taula_inferida)
-
-                graphviz_chart(e)
-                escriu_taula(taula_inferida)
+                
+                if taula_inferida != {}:
+                    graphviz_chart(e)
+                    escriu_taula(taula_inferida)
 
             resultats.append(e)
         return resultats
@@ -298,10 +300,68 @@ if st.button('fer'):
     parser = hmParser(token_stream)
     tree = parser.root()
     visitor = TreeVisitor()
-    visitor.visit(tree)
+    if str(parser.getNumberOfSyntaxErrors()) == '0':
+        visitor.visit(tree)
     # t_res = visitor.visit(tree)
     # print(t_res)
-
+    # st.write(tree.toStringTree(recog=parser))
     st.write(str(parser.getNumberOfSyntaxErrors()) + ' errors de sintaxi.')
 
 # -----------------------------------------------------------------------------
+
+# def unify(x, y, subst):
+#     """Unifies term x and y with initial subst.
+
+#     Returns a subst (map of name->term) that unifies x and y, or None if
+#     they can't be unified. Pass subst={} if no subst are initially
+#     known. Note that {} means valid (but empty) subst.
+#     """
+#     if subst is None:
+#         return None
+#     elif x == y:
+#         return subst
+#     elif isinstance(x, Var):
+#         return unify_variable(x, y, subst)
+#     elif isinstance(y, Var):
+#         return unify_variable(y, x, subst)
+#     elif isinstance(x, App) and isinstance(y, App):
+#         if x.fname != y.fname or len(x.args) != len(y.args):
+#             return None
+#         else:
+#             for i in range(len(x.args)):
+#                 subst = unify(x.args[i], y.args[i], subst)
+#             return subst
+#     else:
+#         return None
+
+# def unify_variable(v, x, subst):
+#     """Unifies variable v with term x, using subst.
+
+#     Returns updated subst or None on failure.
+#     """
+#     assert isinstance(v, Var)
+#     if v.name in subst:
+#         return unify(subst[v.name], x, subst)
+#     elif isinstance(x, Var) and x.name in subst:
+#         return unify(v, subst[x.name], subst)
+#     elif occurs_check(v, x, subst):
+#         return None
+#     else:
+#         # v is not yet in subst and can't simplify x. Extend subst.
+#         return {**subst, v.name: x}
+
+# def occurs_check(v, term, subst):
+#     """Does the variable v occur anywhere inside term?
+
+#     Variables in term are looked up in subst and the check is applied
+#     recursively.
+#     """
+#     assert isinstance(v, Var)
+#     if v == term:
+#         return True
+#     elif isinstance(term, Var) and term.name in subst:
+#         return occurs_check(v, subst[term.name], subst)
+#     elif isinstance(term, App):
+#         return any(occurs_check(v, arg, subst) for arg in term.args)
+#     else:
+#         return False
