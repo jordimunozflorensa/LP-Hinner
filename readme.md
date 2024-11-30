@@ -1,5 +1,3 @@
-# Name 
-
 Jordi Muñoz Florensa: jordi.munoz.florensa@estudiantat.upc.edu
 
 # Pratica d'LP: Analitzador de tipus HinNer
